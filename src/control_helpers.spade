@@ -1,0 +1,451 @@
+use lib::Control;
+use lib::AluOp;
+use lib::BusSrc;
+
+impl Default for Control{
+    fn default() -> Self {
+        Control {
+            reg_we: false,
+            write_sel:0,
+            reg_sel: 0,
+
+            u_we: false,
+            v_we: false,
+            alu_op: AluOp::Add,
+
+            pc_jmp: false,
+            pc_inc: false,
+
+
+            mar_we: false,
+            mar_inc: false,
+
+
+            instr_we: false,
+            instr_step_rst: false,
+            ram_hi_we: false,
+            ram_lo_we: false,
+            mem_hi_we: false, 
+            bus_src: BusSrc::Reg
+
+        }
+    }
+}
+
+impl Control {
+    pub fn with_reg_we(self, reg_we: bool) -> Control {
+        Control {
+            reg_we: reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_write_sel(self, write_sel: uint<2>) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_reg_sel(self, reg_sel: uint<2>) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_u_we(self, u_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_v_we(self, v_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_alu_op(self, alu_op: AluOp) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_pc_jmp(self, pc_jmp: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_pc_inc(self, pc_inc: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_mar_we(self, mar_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_mar_inc(self, mar_inc: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_instr_we(self, instr_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_instr_step_rst(self, instr_step_rst: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_ram_hi_we(self, ram_hi_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_ram_lo_we(self, ram_lo_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_mem_hi_we(self, mem_hi_we: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: mem_hi_we, 
+            bus_src: self.bus_src
+        }
+    }
+
+    pub fn with_bus_src(self, bus_src: BusSrc) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we, 
+            bus_src: bus_src
+        }
+    }
+}
