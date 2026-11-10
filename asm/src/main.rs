@@ -22,14 +22,6 @@ enum Commands {
         #[arg(short, long)]
         output: PathBuf,
     },
-    Control {
-        // #[arg(short, long, value_parser = parse_uint)]
-        // input: usize,
-        #[arg(short, long)]
-        input: PathBuf,
-        #[arg(short, long)]
-        name: String,
-    },
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, EnumString, FromRepr)]
@@ -96,43 +88,6 @@ impl Inst {
         ((self.op as usize) << 12 | arg) as u16
     }
 }
-use std::num::ParseIntError;
-
-fn parse_uint(s: &str) -> Result<usize, ParseIntError> {
-    let (digits, radix) = if let Some(rest) = s.strip_prefix("0x") {
-        (rest, 16)
-    } else if let Some(rest) = s.strip_prefix("0b") {
-        (rest, 2)
-    } else {
-        (s, 10)
-    };
-
-    usize::from_str_radix(digits, radix)
-}
-
-fn print_signal(path: &str, name: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let mut wave = wellen::simple::read(path)?;
-
-    let hierarchy = wave.hierarchy();
-
-    // Find the signal by its full hierarchical name.
-    let var = hierarchy
-        .all_vars()
-        .find(|&v| hierarchy[v].full_name(hierarchy) == name)
-        .ok_or("signal not found")?;
-
-    let signal_ref = hierarchy[var].signal_ref();
-
-    wave.load_signals(&[signal_ref]);
-    let signal = wave.get_signal(signal_ref).unwrap();
-
-    for (time_index, value) in signal.iter_changes() {
-        let time = wave.time_table()[time_index as usize];
-        println!("t={time}: {value}");
-    }
-
-    Ok(())
-}
 
 fn main() -> Result<(), String> {
     let cli = Cli::parse();
@@ -150,43 +105,7 @@ fn main() -> Result<(), String> {
 
             println!("{:?}", insts);
         }
-        Commands::Control { input, name } => {
-            let full_name = format!("tinycpu3::main.{name}");
-            let mut wave = wellen::simple::read(input).unwrap();
-
-            let hierarchy = wave.hierarchy();
-
-            // Find the signal by its full hierarchical name.
-            let var = hierarchy
-                .all_vars()
-                .find(|&v| hierarchy[v].full_name(hierarchy) == full_name)
-                .ok_or("signal not found")?;
-
-            let signal_ref = hierarchy[var].signal_ref();
-
-            wave.load_signals(&[signal_ref]);
-            let signal = wave.get_signal(signal_ref).unwrap();
-
-            for (time_index, value) in signal.iter_changes() {
-                match u64::try_from(value) {
-                    Ok(raw) => {
-                        let raw = u32::try_from(raw).unwrap();
-                        let bits = arbitrary_int::u22::try_new(raw).map_err(|e| e.to_string())?;
-
-                        let control = control::Control::new_with_raw_value(bits);
-                        println!("{control:#?}");
-                    }
-                    Err(_) => {
-                        println!("{value}"); // e.g. bits containing x or z
-                    }
-                }
-            }
-            // let bits = arbitrary_int::u22::try_new(input as u32).unwrap();
-            // let c = control::Control::new_with_raw_value(bits);
-            // println!("{:#?}", c);
-        }
     }
-    // println!("{:?}", "0x55".parse::<usize>());
 
     Ok(())
 }
