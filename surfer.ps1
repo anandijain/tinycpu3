@@ -66,6 +66,22 @@ $lines += @('    },', ')')
 [IO.File]::WriteAllLines($metadataPath, $lines, [Text.UTF8Encoding]::new($false))
 
 if (-not $PrepareOnly) {
+    $surferProcessName = [IO.Path]::GetFileNameWithoutExtension($SurferExe)
+    $surferProcesses = @(Get-Process -Name $surferProcessName -ErrorAction SilentlyContinue)
+
+    # Ask every existing window to close, then stop any instance that hangs.
+    foreach ($surferProcess in $surferProcesses) {
+        if (-not $surferProcess.HasExited) {
+            [void]$surferProcess.CloseMainWindow()
+        }
+    }
+    foreach ($surferProcess in $surferProcesses) {
+        if (-not $surferProcess.WaitForExit(2000)) {
+            Stop-Process -InputObject $surferProcess -Force
+            $surferProcess.WaitForExit()
+        }
+    }
+
     Push-Location -LiteralPath $projectRoot
     try {
         & $SurferExe $wavePath

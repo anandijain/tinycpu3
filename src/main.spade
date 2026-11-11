@@ -3,45 +3,6 @@ mod control_helpers;
 type Word = uint<16>;
 type Addr = uint<12>;
 type Byte = uint<8>;
-
-struct Debug{
-    pc: Addr,
-    bus: Word, 
-    mar: Addr,
-    instr: Word,
-    control: Control,
-    cycle: uint<32>
-}
-
-entity main(clk: clock) {
-    reg(clk) rst: bool initial(true) = false;
-    decl c;
-    let manual_data = 0;
-
-    let debug = inst datapath(clk, rst, c, manual_data);
-    let c = inst controller(clk, rst, c, debug.instr);
-}
-
-entity regfile<#uint N>(
-    clk: clock,
-    rst: bool, 
-
-    c: Control,
-    data: Word
-) -> ([Word; N], Word){
-    // let idxs = 0..N;
-    let idxs = std::array::unfold(0, fn |i| trunc(i+1));
-    reg(clk) x: [Word; N] reset(rst: [0; N]) = idxs.map(fn |i| 
-        if c.reg_we && i == c.write_sel {
-            data
-        } else {
-            x[i]
-        }
-    );  
-    (x, x[c.reg_sel])
-
-}
-
 struct Control {
     reg_we: bool,
     write_sel: uint<2>,
@@ -65,6 +26,7 @@ struct Control {
 
     mem_hi_we: bool,
     bus_src: BusSrc,
+    hlt: bool,
 }
 
 enum BusSrc{
@@ -76,12 +38,87 @@ enum BusSrc{
     Man
 }
 enum AluOp{
+    Nop,
     Add,
     Mul,
     Sub,
     And,
     Shr
 }
+struct Datapath{
+    pc: Addr,
+    bus: Word, 
+    mar: Addr,
+    instr: Word,
+    control: Control,
+    cycle: uint<32>,
+    x: [Word; 4],
+    jeq: bool,
+    jz: bool,
+}
+
+struct Debug{
+    pc: Addr,
+    bus: Word, 
+    mar: Addr,
+    instr: Word,
+    op: IsaOp,
+    arg: uint<12>,
+    control: Control,
+    cycle: uint<32>,
+    instr_step: uint<4>,
+    x: [Word; 4],
+    num_exec: uint<32>
+}
+
+entity main(clk: clock) -> Debug {
+    reg(clk) rst: bool initial(true) = false;
+    decl c;
+    let manual_data = 0;
+
+    let datapath = inst datapath(clk, rst, c, manual_data);
+    let (c, step, num_exec) = inst controller(clk, rst, c, datapath.instr, datapath.jeq, datapath.jz);
+    let opcode: uint<4> = trunc((datapath.instr >> 12) & 0xF);
+    let arg = trunc(datapath.instr & 0xFFF);
+    let op = decode_opcode(opcode);
+    let foo = false;
+    let debug = Debug {
+        pc: datapath.pc,
+        bus: datapath.bus,
+        mar: datapath.mar,
+        instr: datapath.instr,
+        op: op,
+        arg,
+        control: c,
+        cycle: datapath.cycle,
+        instr_step: step,
+        x: datapath.x,
+        num_exec,
+    };
+    debug
+}
+
+entity regfile<#uint N>(
+    clk: clock,
+    rst: bool, 
+
+    c: Control,
+    data: Word
+) -> ([Word; N], Word){
+    // let idxs = 0..N;
+    let idxs = std::array::unfold(0, fn |i| trunc(i+1));
+    reg(clk) x: [Word; N] reset(rst: [0; N]) = idxs.map(fn |i| 
+        if c.reg_we && i == c.write_sel {
+            data
+        } else {
+            x[i]
+        }
+    );  
+    (x, x[c.reg_sel])
+
+}
+
+
 
 fn alu(
     u: Word, 
@@ -89,6 +126,7 @@ fn alu(
     op: AluOp
 ) -> Word {
     match op{
+        AluOp::Nop => 0,
         AluOp::Add => trunc(u + v),
         AluOp::Mul => trunc(u * v),
         AluOp::Sub => trunc(u - v),
@@ -106,7 +144,7 @@ entity datapath(
 
     c: Control,
     manual_data: Word
-) -> Debug {
+) -> Datapath {
     decl bus; 
     let (x, reg_out) = inst regfile::<4>(clk, rst, c, bus);
 
@@ -136,6 +174,12 @@ entity datapath(
 
     let ram_out: Word = zext(mem_hi) << 8 | zext(ram);
 
+    // what changes if the cflags are regs? 
+    // reg(clk) is_a_eq_b: bool reset(rst: false) = if x[0] == x[1] {true} else {false};
+    let is_a_eq_b = x[0] == x[1];
+    let is_a_zero = x[0] == 0;
+
+
     let bus = match c.bus_src {
         BusSrc::Reg => reg_out,
         BusSrc::Alu => alu_out,
@@ -147,13 +191,16 @@ entity datapath(
 
     reg(clk) cycle: uint<32> reset(rst: 0) = trunc(cycle + 1);
 
-    Debug {
+    Datapath {
         pc,
         bus, 
         mar,
         instr,
         control: c,
-        cycle
+        cycle,
+        x,
+        jeq: is_a_eq_b,
+        jz: is_a_zero
     }
 }
 
@@ -226,7 +273,9 @@ entity controller(
     rst: bool,
     c: Control,
     instr: Word,
-) -> Control {
+    jeq: bool,
+    jz: bool,
+) -> (Control, uint<4>, uint<32>) {
     /*
     we fetch no matter what when step <= fetch_len (however many steps fetching an instruction into instr takes)
     big-endian
@@ -240,7 +289,7 @@ entity controller(
     */
     let opcode: uint<4> = trunc((instr >> 12) & 0xF);
     reg(clk) step: uint<4> reset(rst || c.instr_step_rst: 0) = trunc(step + 1);
-
+    reg(clk) num_exec: uint<32> reset(rst: 0) = if c.instr_step_rst {trunc(num_exec+1)} else {num_exec};
     
     let fetch: [Control; 4] = [
         Control::default().with_mar_we(true).with_bus_src(BusSrc::Pc),
@@ -258,7 +307,7 @@ entity controller(
 
     let LDA_STEPS: [Control; 5] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_write_sel(0).with_reg_we(true),
         END,
@@ -267,15 +316,16 @@ entity controller(
     // A -> u, addr -> v, add, alu_out-> A
     let ADD_STEPS: [Control;6] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_v_we(true),
         Control::default().with_bus_src(BusSrc::Alu).with_alu_op(AluOp::Add).with_reg_we(true).with_write_sel(0),
         END
     ];
+
     let SUB_STEPS: [Control;6] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_v_we(true),
         Control::default().with_bus_src(BusSrc::Alu).with_alu_op(AluOp::Sub).with_reg_we(true).with_write_sel(0),
@@ -305,13 +355,12 @@ entity controller(
     // jmp addr. places addr in pc 
     let JMP_STEPS: [Control; 2] = [
         Control::default().with_bus_src(BusSrc::Instr).with_pc_jmp(true),
-        END
+        END,
     ];
-    let JZ_STEPS = NOP_STEPS;
 
     let MUL_STEPS: [Control;6] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_v_we(true),
         Control::default().with_bus_src(BusSrc::Alu).with_alu_op(AluOp::Mul).with_reg_we(true).with_write_sel(0),
@@ -320,16 +369,15 @@ entity controller(
 
     let LDB_STEPS: [Control; 5] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_write_sel(1).with_reg_we(true),
         END,
     ];
-    let JEQ_STEPS = NOP_STEPS;
 
     let AND_STEPS: [Control;6] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_v_we(true),
         Control::default().with_bus_src(BusSrc::Alu).with_alu_op(AluOp::And).with_reg_we(true).with_write_sel(0),
@@ -338,7 +386,7 @@ entity controller(
 
     let SHR_STEPS: [Control;6] = [
         Control::default().with_bus_src(BusSrc::Instr).with_mar_we(true),
-        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true).with_pc_inc(true),
+        Control::default().with_bus_src(BusSrc::Reg).with_reg_sel(0).with_u_we(true).with_mem_hi_we(true),
         Control::default().with_mar_inc(true),
         Control::default().with_bus_src(BusSrc::Ram).with_v_we(true),
         Control::default().with_bus_src(BusSrc::Alu).with_alu_op(AluOp::Shr).with_reg_we(true).with_write_sel(0),
@@ -350,7 +398,7 @@ entity controller(
     let HLT_STEPS: [Control; 2] = [Control::default().with_hlt(true), END];
 
     let fetch_len = fetch.len();
-    if step < zext(fetch_len) {
+    let c = if step < zext(fetch_len) {
         fetch[trunc(step)]
     } else {
         match decode_opcode(opcode) {
@@ -361,15 +409,28 @@ entity controller(
             IsaOp::Sta => STA_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Ldi => LDI_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Jmp => JMP_STEPS[trunc(step - zext(fetch_len))],
-            IsaOp::Jz => JZ_STEPS[trunc(step - zext(fetch_len))],
+            IsaOp::Jz => {
+                if jz {
+                    JMP_STEPS[trunc(step - zext(fetch_len))]
+                } else {
+                    END
+                }
+            },
             IsaOp::Mul => MUL_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Ldb => LDB_STEPS[trunc(step - zext(fetch_len))],
-            IsaOp::Jeq => JEQ_STEPS[trunc(step - zext(fetch_len))],
+            IsaOp::Jeq => {
+                if jeq {
+                    JMP_STEPS[trunc(step - zext(fetch_len))]
+                } else {
+                    END
+                }
+            },
             IsaOp::And => AND_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Shr => SHR_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Call => CALL_STEPS[trunc(step - zext(fetch_len))],
             IsaOp::Ret => RET_STEPS[trunc(step - zext(fetch_len))],
-            IsaOp::Hlt => END,
+            IsaOp::Hlt => HLT_STEPS[trunc(step - zext(fetch_len))],
         }
-    }
+    };
+    (c, step, num_exec)
 }

@@ -1,0 +1,11 @@
+x = 4094
+y = 4092
+init: 
+    ldi 42
+    sta x
+    ldi 27 
+    add x
+    sta y
+end:
+    hlt
+    

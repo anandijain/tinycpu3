@@ -1,0 +1,15 @@
+x = 4094
+
+main: 
+    ldi 69
+    sta x
+    ldb x
+    jeq to_jmp
+    jmp end
+
+to_jmp: 
+    ldi 42
+    hlt
+
+end: 
+    hlt
