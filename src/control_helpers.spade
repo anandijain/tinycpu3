@@ -26,8 +26,10 @@ impl Default for Control{
             ram_hi_we: false,
             ram_lo_we: false,
             mem_hi_we: false, 
-            bus_src: BusSrc::Reg,
-            hlt: false
+            bus_src: BusSrc::Nop,
+            hlt: false,
+            sp_push: false,
+            sp_pop: false
 
         }
     }
@@ -57,7 +59,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -84,7 +88,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -111,7 +117,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -138,7 +146,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -165,7 +175,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -192,7 +204,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -219,7 +233,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -246,7 +262,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -273,7 +291,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -300,7 +320,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -327,7 +349,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -354,7 +378,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -381,7 +407,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -408,7 +436,9 @@ impl Control {
             ram_lo_we: ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -435,7 +465,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: mem_hi_we, 
             bus_src: self.bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -462,7 +494,9 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we, 
             bus_src: bus_src,
-            hlt: self.hlt
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
         }
     }
 
@@ -488,7 +522,65 @@ impl Control {
             ram_lo_we: self.ram_lo_we,
             mem_hi_we: self.mem_hi_we,
             bus_src: self.bus_src,
-            hlt: hlt
+            hlt: hlt,
+            sp_push: self.sp_push,
+            sp_pop: self.sp_pop
+        }
+    }
+
+    pub fn with_sp_push(self, sp_push: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we,
+            bus_src: self.bus_src,
+            hlt: self.hlt,
+            sp_push: sp_push,
+            sp_pop: self.sp_pop
+        }
+    }
+
+    pub fn with_sp_pop(self, sp_pop: bool) -> Control {
+        Control {
+            reg_we: self.reg_we,
+            write_sel: self.write_sel,
+            reg_sel: self.reg_sel,
+
+            u_we: self.u_we,
+            v_we: self.v_we,
+            alu_op: self.alu_op,
+
+            pc_jmp: self.pc_jmp,
+            pc_inc: self.pc_inc,
+
+            mar_we: self.mar_we,
+            mar_inc: self.mar_inc,
+
+            instr_we: self.instr_we,
+            instr_step_rst: self.instr_step_rst,
+            ram_hi_we: self.ram_hi_we,
+            ram_lo_we: self.ram_lo_we,
+            mem_hi_we: self.mem_hi_we,
+            bus_src: self.bus_src,
+            hlt: self.hlt,
+            sp_push: self.sp_push,
+            sp_pop: sp_pop
         }
     }
 }

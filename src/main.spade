@@ -27,15 +27,20 @@ struct Control {
     mem_hi_we: bool,
     bus_src: BusSrc,
     hlt: bool,
+
+    sp_push: bool, 
+    sp_pop: bool 
 }
 
 enum BusSrc{
+    Nop,
     Reg,
     Alu,
     Pc, 
     Instr,
     Ram,
-    Man
+    Man,
+    Sp
 }
 enum AluOp{
     Nop,
@@ -45,11 +50,13 @@ enum AluOp{
     And,
     Shr
 }
+
 struct Datapath{
     pc: Addr,
     bus: Word, 
     mar: Addr,
     instr: Word,
+    sp: Addr,
     control: Control,
     cycle: uint<32>,
     x: [Word; 4],
@@ -62,6 +69,7 @@ struct Debug{
     bus: Word, 
     mar: Addr,
     instr: Word,
+    sp: Addr, 
     op: IsaOp,
     arg: uint<12>,
     control: Control,
@@ -87,6 +95,7 @@ entity main(clk: clock) -> Debug {
         bus: datapath.bus,
         mar: datapath.mar,
         instr: datapath.instr,
+        sp: datapath.sp,
         op: op,
         arg,
         control: c,
@@ -179,14 +188,17 @@ entity datapath(
     let is_a_eq_b = x[0] == x[1];
     let is_a_zero = x[0] == 0;
 
+    reg(clk) sp: Addr reset(rst: 4094) = if c.sp_push {sp -. 2} else if c.sp_pop {sp +. 2} else {sp};
 
     let bus = match c.bus_src {
+        BusSrc::Nop => 0,
         BusSrc::Reg => reg_out,
         BusSrc::Alu => alu_out,
         BusSrc::Pc => zext(pc), 
         BusSrc::Instr => instr_out,
         BusSrc::Ram => ram_out,
-        BusSrc::Man => manual_data
+        BusSrc::Man => manual_data,
+        BusSrc::Sp => zext(sp)
     };
 
     reg(clk) cycle: uint<32> reset(rst: 0) = trunc(cycle + 1);
@@ -196,6 +208,7 @@ entity datapath(
         bus, 
         mar,
         instr,
+        sp,
         control: c,
         cycle,
         x,
@@ -217,7 +230,7 @@ entity ram(
     let ram = inst std::mem::clocked_memory_init::<4096, _, _, _>(
         clk, 
         [(write_en, addr, data)],
-        include_bytes!("../asm/outs/prog.ram")
+        [0; 4096]
     );
 
     inst std::mem::read_memory(ram, addr)
@@ -393,8 +406,28 @@ entity controller(
         END
     ];
 
-    let CALL_STEPS = NOP_STEPS;
-    let RET_STEPS = NOP_STEPS;
+    // call addr
+    let CALL_STEPS: [Control; 7] = [
+        Control::default().with_sp_push(true),
+        Control::default().with_bus_src(BusSrc::Sp).with_mar_we(true),
+        Control::default().with_bus_src(BusSrc::Pc).with_ram_hi_we(true),
+        Control::default().with_mar_inc(true),
+        Control::default().with_bus_src(BusSrc::Pc).with_ram_lo_we(true),
+        Control::default().with_bus_src(BusSrc::Instr).with_pc_jmp(true),
+        END
+    ];
+
+    // pc -> ram[sp-2]
+
+    let RET_STEPS: [Control; 6] = [
+        Control::default().with_bus_src(BusSrc::Sp).with_mar_we(true),
+        Control::default().with_mem_hi_we(true),
+        Control::default().with_mar_inc(true),
+        Control::default().with_bus_src(BusSrc::Ram).with_pc_jmp(true),
+        Control::default().with_sp_pop(true),
+        END
+    ];
+
     let HLT_STEPS: [Control; 2] = [Control::default().with_hlt(true), END];
 
     let fetch_len = fetch.len();

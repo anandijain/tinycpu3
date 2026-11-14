@@ -1,0 +1,15 @@
+init: 
+    n = 1000
+    ldi 4
+    sta n
+
+    ret = 1002
+    ldi 1 
+    sta ret
+
+; while n != 1
+; ret = n * ret 
+; n = n - 1
+
+main:
+    if 

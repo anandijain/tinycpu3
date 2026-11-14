@@ -1,0 +1,32 @@
+init: 
+    x = 1000 
+    ldi 0
+    sta x 
+
+    one = 1002
+    ldi 1 
+    sta one
+
+    two = 1004
+    ldi 2 
+    sta two
+
+
+main: 
+    call f
+    call f
+    lda x ; 1 + 2 + 1 +2 = 6
+    hlt
+
+f: 
+    lda x 
+    add one
+    sta x 
+    call g
+    ret
+ 
+g:
+    lda x
+    add two
+    sta x
+    ret
